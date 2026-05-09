@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume — Tech & Automotive</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d0f;
+    --bg2: #111418;
+    --bg3: #181d22;
+    --accent: #00e5a0;
+    --accent2: #00b8ff;
+    --accent3: #ff6b35;
+    --text: #e8eaed;
+    --text2: #8a9bb0;
+    --text3: #4a5568;
+    --border: rgba(0,229,160,0.15);
+    --border2: rgba(0,184,255,0.2);
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(0,229,160,0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Grid pattern background */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0,229,160,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* BOOT SCREEN */
+  #boot {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    transition: opacity 0.8s ease;
+  }
+  #boot.fade-out { opacity: 0; pointer-events: none; }
+
+  .boot-logo {
+    font-family: var(--mono);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+    animation: flicker 3s infinite;
+  }
+  .boot-sub {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text3);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+  }
+  .boot-lines {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text2);
+    width: 100%;
+    max-width: 500px;
+    line-height: 1.8;
+  }
+  .boot-line { opacity: 0; animation: bootLine 0.3s ease forwards; }
+  .boot-line.ok::after { content: '  [OK]'; color: var(--accent); }
+  .boot-line.warn::after { content: '  [WARN]'; color: var(--accent3); }
+
+  .boot-bar-wrap {
+    width: 100%;
+    max-width: 500px;
+    margin-top: 1.5rem;
+    height: 2px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .boot-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 2.5s ease;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .enter-btn {
+    margin-top: 2rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--bg);
+    background: var(--accent);
+    border: none;
+    padding: 0.7rem 2rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .enter-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 20px rgba(0,229,160,0.5);
+  }
+  .enter-btn.visible { opacity: 1; }
+
+  @keyframes bootLine {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96%, 98% { opacity: 0.6; }
+    97% { opacity: 0.9; }
+  }
+
+  /* MAIN CONTENT */
+  #main {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    min-height: 100vh;
+  }
+  #main.visible { opacity: 1; }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(11,13,15,0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-id {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text2);
+    text-decoration: none;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--accent);
+    transition: width 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 8rem 2rem 4rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    gap: 4rem;
+  }
+  .hero-left { flex: 1; }
+  .hero-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .hero-name {
+    font-family: var(--sans);
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-name span { color: var(--accent); font-weight: 600; }
+  .hero-desc {
+    font-size: 1.05rem;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 500px;
+    margin-bottom: 2.5rem;
+  }
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--bg);
+    background: var(--accent);
+    border: none;
+    padding: 0.8rem 1.8rem;
+    cursor: pointer;
+    text-decoration: none;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: box-shadow 0.2s, transform 0.2s;
+    display: inline-block;
+    text-transform: uppercase;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 25px rgba(0,229,160,0.4);
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--accent2);
+    background: transparent;
+    border: 1px solid var(--accent2);
+    padding: 0.8rem 1.8rem;
+    cursor: pointer;
+    text-decoration: none;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: background 0.2s, box-shadow 0.2s;
+    display: inline-block;
+    text-transform: uppercase;
+  }
+  .btn-secondary:hover {
+    background: rgba(0,184,255,0.08);
+    box-shadow: 0 0 20px rgba(0,184,255,0.2);
+  }
+
+  .hero-right {
+    flex: 0 0 280px;
+    position: relative;
+  }
+  .status-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .status-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .status-header {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,229,160,0.4); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px transparent; }
+  }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.8rem;
+  }
+  .status-row:last-child { border-bottom: none; }
+  .status-label { color: var(--text2); font-family: var(--mono); font-size: 0.65rem; }
+  .status-val { color: var(--text); font-weight: 500; }
+  .status-badge {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+  }
+  .badge-green { background: rgba(0,229,160,0.1); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+  .badge-blue { background: rgba(0,184,255,0.1); color: var(--accent2); border: 1px solid rgba(0,184,255,0.2); }
+  .badge-orange { background: rgba(255,107,53,0.1); color: var(--accent3); border: 1px solid rgba(255,107,53,0.2); }
+
+  /* SECTIONS */
+  section {
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--bg3);
+  }
+  .section-title {
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    margin-bottom: 3rem;
+  }
+  .section-title em {
+    color: var(--accent);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* SKILLS */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .skill-item {
+    background: var(--bg);
+    padding: 1.2rem;
+    transition: background 0.2s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-item:hover { background: var(--bg2); }
+  .skill-item:hover .skill-bar-fill { box-shadow: 0 0 8px var(--accent); }
+  .skill-cat {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    color: var(--text3);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .skill-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.6rem;
+  }
+  .skill-bar {
+    height: 2px;
+    background: var(--bg3);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .skill-bar-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 1s ease;
+  }
+
+  /* EXPERIENCE */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .timeline-item:last-child { border-bottom: none; margin-bottom: 0; }
+  .timeline-dot {
+    position: absolute;
+    left: -2.5rem;
+    top: 0.3rem;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--accent);
+    background: var(--bg);
+    transform: rotate(45deg);
+  }
+  .timeline-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .timeline-date {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 0.2em;
+  }
+  .timeline-company {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+  }
+  .timeline-title {
+    font-size: 1.15rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+  .timeline-body {
+    font-size: 0.9rem;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .timeline-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    border-radius: 2px;
+  }
+
+  /* PROJECTS */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  .project-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 1.8rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.2s;
+    cursor: default;
+  }
+  .project-card:hover {
+    border-color: rgba(0,229,160,0.35);
+    transform: translateY(-2px);
+  }
+  .project-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  .project-card:hover::after { transform: scaleX(1); }
+  .project-num {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 0.3em;
+    margin-bottom: 0.75rem;
+  }
+  .project-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+  .project-desc {
+    font-size: 0.875rem;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+  }
+  .project-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .project-features li {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .project-features li::before {
+    content: '>';
+    color: var(--accent);
+  }
+
+  /* EDUCATION */
+  .edu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 600px) { .edu-grid { grid-template-columns: 1fr; } }
+  .edu-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 1.8rem;
+    position: relative;
+  }
+  .edu-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent2);
+  }
+  .edu-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0,184,255,0.08);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+  }
+  .edu-degree {
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+  }
+  .edu-school {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent2);
+    margin-bottom: 0.75rem;
+  }
+  .edu-desc {
+    font-size: 0.8rem;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* CONTACT / FOOTER */
+  #contact {
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 5rem 2rem;
+  }
+  .contact-pre {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .contact-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 300;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  .contact-title span { color: var(--accent); font-weight: 600; }
+  .contact-sub {
+    font-size: 1rem;
+    color: var(--text2);
+    max-width: 480px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+  .footer-mono {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 0.2em;
+    margin-top: 4rem;
+  }
+
+  /* ANIMATIONS */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* DIVIDER */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0;
+  }
+
+  /* Mobile nav adjustments */
+  @media (max-width: 700px) {
+    .nav-links { display: none; }
+    .hero-right { display: none; }
+    #hero { flex-direction: column; }
+    .edu-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div class="boot-logo">SYS://INIT</div>
+  <div class="boot-sub">Portfolio OS v2.4.1 — Loading</div>
+  <div class="boot-lines" id="boot-lines"></div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+  <button class="enter-btn" id="enter-btn" onclick="enterSite()">ENTER SYSTEM</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <nav>
+    <div class="nav-id">// PORTFOLIO.SYS</div>
+    <ul class="nav-links">
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-left">
+      <div class="hero-tag">Cybersecurity · Automotive · Software</div>
+      <h1 class="hero-name">
+        Problem<br><span>Solver.</span>
+        <br>System<br>Builder.
+      </h1>
+      <p class="hero-desc">
+        B-Level Automotive Technician and Cybersecurity graduate who bridges the physical and digital — diagnosing complex vehicle systems by day, building security tools and workflow automation by night.
+      </p>
+      <div class="hero-btns">
+        <a href="#experience" class="btn-primary">View Journey</a>
+        <a href="#projects" class="btn-secondary">See Projects</a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="status-card">
+        <div class="status-header">
+          <div class="pulse-dot"></div>
+          SYSTEM STATUS
+        </div>
+        <div class="status-row">
+          <span class="status-label">CURRENT ROLE</span>
+          <span class="status-badge badge-green">B-LEVEL TECH</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">EDUCATION</span>
+          <span class="status-badge badge-blue">B.S. CYBERSEC</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">EMPLOYER</span>
+          <span class="status-val" style="font-size:0.75rem;">Suntrup Kia</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">CERT LEVEL</span>
+          <span class="status-badge badge-orange">GOOGLE CYBER</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">SPECIALTIES</span>
+          <span class="status-val" style="font-size:0.7rem;">4 DOMAINS</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">STATUS</span>
+          <span class="status-badge badge-green">AVAILABLE</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="section-label">01 — Core Competencies</div>
+    <h2 class="section-title">Skills & <em>Tools</em></h2>
+
+    <div class="skills-grid" id="skills-grid"></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+    <div class="section-label">02 — Career Timeline</div>
+    <h2 class="section-title">Work <em>Experience</em></h2>
+
+    <div class="timeline">
+      <div class="timeline-item reveal">
+        <div class="timeline-dot"></div>
+        <div class="timeline-meta">
+          <span class="timeline-date">PRESENT</span>
+          <span class="timeline-company">// SUNTRUP KIA</span>
+        </div>
+        <h3 class="timeline-title">B-Level Automotive Technician</h3>
+        <p class="timeline-body">Diagnose and repair increasingly complex modern vehicle systems — mechanical, electrical, and software-driven. Work with diagnostic scan tools, interpret DTC codes, and apply logical troubleshooting under fast-paced shop conditions. The automotive field mirrors cybersecurity: both demand methodical root-cause analysis of layered, interconnected systems.</p>
+        <div class="timeline-tags">
+          <span class="tag">Diagnostics</span>
+          <span class="tag">Electrical Systems</span>
+          <span class="tag">OBD-II</span>
+          <span class="tag">Vehicle Software</span>
+          <span class="tag">Root-Cause Analysis</span>
+        </div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-dot"></div>
+        <div class="timeline-meta">
+          <span class="timeline-date">PREVIOUS</span>
+          <span class="timeline-company">// AT&T</span>
+        </div>
+        <h3 class="timeline-title">Technology & Sales Associate</h3>
+        <p class="timeline-body">Technology-focused customer-facing role with responsibility for explaining complex products clearly to non-technical audiences. Built communication skills, technical product fluency, and the ability to multitask in high-volume environments — skills that translate directly into technical consulting and client-facing security roles.</p>
+        <div class="timeline-tags">
+          <span class="tag">Technical Communication</span>
+          <span class="tag">Customer Service</span>
+          <span class="tag">Sales</span>
+          <span class="tag">Product Knowledge</span>
+        </div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-dot"></div>
+        <div class="timeline-meta">
+          <span class="timeline-date">EARLY CAREER</span>
+          <span class="timeline-company">// FOOD & BEVERAGE</span>
+        </div>
+        <h3 class="timeline-title">Server & Bartender</h3>
+        <p class="timeline-body">Worked in restaurants while attending college full-time. These environments demanded rapid prioritization, adaptability under pressure, and strong interpersonal communication — traits that underpin every technical role since.</p>
+        <div class="timeline-tags">
+          <span class="tag">Pressure Handling</span>
+          <span class="tag">Multitasking</span>
+          <span class="tag">Interpersonal Skills</span>
+        </div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-dot"></div>
+        <div class="timeline-meta">
+          <span class="timeline-date">FOUNDATION</span>
+          <span class="timeline-company">// EARLY ROLES</span>
+        </div>
+        <h3 class="timeline-title">Lifeguard · Agricultural Field Work</h3>
+        <p class="timeline-body">Earliest work built discipline, physical resilience, and responsibility. As a certified lifeguard, earned credentials in CPR, AED operation, oxygen administration, and bloodborne pathogen safety — formal training in high-stakes decision making from an early age.</p>
+        <div class="timeline-tags">
+          <span class="tag">CPR Certified</span>
+          <span class="tag">AED</span>
+          <span class="tag">O₂ Administration</span>
+          <span class="tag">Discipline</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="section-label">03 — Built Things</div>
+    <h2 class="section-title">Tech <em>Projects</em></h2>
+
+    <div class="projects-grid">
+      <div class="project-card reveal">
+        <div class="project-num">// PROJECT_001</div>
+        <h3 class="project-title">Adjuster Assistant</h3>
+        <p class="project-desc">A workflow-focused productivity console designed to help insurance adjusters manage information more efficiently during calls and documentation. Built to reduce friction, eliminate repetitive manual input, and centralize information access.</p>
+        <ul class="project-features">
+          <li>Autosaving note functionality</li>
+          <li>Template autofill support</li>
+          <li>Centralized information hub</li>
+          <li>Streamlined call workflow</li>
+          <li>Minimal complexity design</li>
+        </ul>
+      </div>
+
+      <div class="project-card reveal">
+        <div class="project-num">// PROJECT_002</div>
+        <h3 class="project-title">Tech Assistant Platform</h3>
+        <p class="project-desc">A technology-focused assistant platform that centralizes technical resources, tools, and information into an accessible, user-friendly interface. Reflects a core interest in usability, workflow optimization, and practical software development.</p>
+        <ul class="project-features">
+          <li>Unified technical resource hub</li>
+          <li>Web-based interface</li>
+          <li>Accessibility-first design</li>
+          <li>Workflow optimization focus</li>
+          <li>Practical tooling approach</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- EDUCATION -->
+  <section id="education">
+    <div class="section-label">04 — Academic Background</div>
+    <h2 class="section-title">Education & <em>Certs</em></h2>
+
+    <div class="edu-grid">
+      <div class="edu-card reveal">
+        <div class="edu-icon">🎓</div>
+        <div class="edu-degree">B.S. in Cybersecurity</div>
+        <div class="edu-school">// SCHOOL OF BUSINESS PROGRAM</div>
+        <p class="edu-desc">A business-focused cybersecurity program combining technical education with broader operational and systems thinking. Covered networking, Linux, SQL, defense strategies, web technologies, and analytical problem solving.</p>
+      </div>
+
+      <div class="edu-card reveal">
+        <div class="edu-icon">🔐</div>
+        <div class="edu-degree">Google Cybersecurity Certificate</div>
+        <div class="edu-school">// PROFESSIONAL CERTIFICATION</div>
+        <p class="edu-desc">Industry-recognized credential in cybersecurity fundamentals, threat detection, network analysis, and incident response. Complements the degree with hands-on applied coursework.</p>
+      </div>
+
+      <div class="edu-card reveal" style="grid-column: 1 / -1;">
+        <div class="edu-icon">⚙️</div>
+        <div class="edu-degree">Technical Skill Stack</div>
+        <div class="edu-school">// TOOLS & LANGUAGES</div>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem;">
+          <span class="tag">Python</span><span class="tag">SQL</span><span class="tag">Linux</span><span class="tag">HTML/CSS/JS</span>
+          <span class="tag">Networking</span><span class="tag">CrowdStrike Falcon</span><span class="tag">Wazuh</span>
+          <span class="tag">Wireshark</span><span class="tag">Burp Suite</span><span class="tag">OBD Diagnostics</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <div id="contact">
+    <div class="contact-pre">05 — Get In Touch</div>
+    <h2 class="contact-title">Ready to <span>Connect</span></h2>
+    <p class="contact-sub">Open to roles in cybersecurity, infrastructure, IT operations, or technical support — anywhere systems thinking, hands-on troubleshooting, and workflow optimization matter.</p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <a href="mailto:" class="btn-primary">Send Message</a>
+      <a href="#" class="btn-secondary">Download Resume</a>
+    </div>
+    <div class="footer-mono" style="margin-top:4rem;">// PORTFOLIO.SYS — BUILT WITH PURPOSE · ALL SYSTEMS OPERATIONAL</div>
+  </div>
+</div>
+
+<script>
+const lines = [
+  { text: 'Initializing runtime environment', cls: 'ok' },
+  { text: 'Loading career data modules', cls: 'ok' },
+  { text: 'Mounting cybersecurity profile', cls: 'ok' },
+  { text: 'Linking automotive diagnostics layer', cls: 'ok' },
+  { text: 'Importing project registry', cls: 'ok' },
+  { text: 'Verifying skill signatures', cls: 'ok' },
+  { text: 'Establishing secure context', cls: 'ok' },
+  { text: 'One conventional career path', cls: 'warn' },
+  { text: 'Portfolio system ready', cls: 'ok' }
+];
+
+const skillData = [
+  { cat: 'Security', name: 'Cybersecurity', color: '#00e5a0', pct: 85 },
+  { cat: 'Language', name: 'Python', color: '#00e5a0', pct: 70 },
+  { cat: 'Language', name: 'SQL', color: '#00b8ff', pct: 65 },
+  { cat: 'Systems', name: 'Linux', color: '#00b8ff', pct: 75 },
+  { cat: 'Security', name: 'Wireshark', color: '#00e5a0', pct: 70 },
+  { cat: 'Security', name: 'Burp Suite', color: '#00e5a0', pct: 65 },
+  { cat: 'Security', name: 'CrowdStrike', color: '#ff6b35', pct: 60 },
+  { cat: 'Security', name: 'Wazuh (SIEM)', color: '#ff6b35', pct: 60 },
+  { cat: 'Web', name: 'HTML/CSS/JS', color: '#00b8ff', pct: 70 },
+  { cat: 'Automotive', name: 'Diagnostics', color: '#ff6b35', pct: 90 },
+  { cat: 'Automotive', name: 'Electrical Sys', color: '#ff6b35', pct: 85 },
+  { cat: 'Network', name: 'Networking', color: '#00b8ff', pct: 75 },
+];
+
+const container = document.getElementById('boot-lines');
+let delay = 0;
+lines.forEach((l, i) => {
+  const el = document.createElement('div');
+  el.className = 'boot-line ' + l.cls;
+  el.textContent = '> ' + l.text + '...';
+  el.style.animationDelay = delay + 's';
+  delay += 0.28;
+  container.appendChild(el);
+});
+
+setTimeout(() => {
+  const bar = document.getElementById('boot-bar');
+  bar.style.width = '100%';
+}, 300);
+
+setTimeout(() => {
+  const btn = document.getElementById('enter-btn');
+  btn.classList.add('visible');
+}, 3200);
+
+function enterSite() {
+  document.getElementById('boot').classList.add('fade-out');
+  setTimeout(() => {
+    document.getElementById('boot').style.display = 'none';
+    const main = document.getElementById('main');
+    main.classList.add('visible');
+    buildSkills();
+    initReveal();
+    initSkillBars();
+  }, 800);
+}
+
+function buildSkills() {
+  const grid = document.getElementById('skills-grid');
+  skillData.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'skill-item';
+    el.innerHTML = `
+      <div class="skill-cat">${s.cat}</div>
+      <div class="skill-name">${s.name}</div>
+      <div class="skill-bar"><div class="skill-bar-fill" style="width:0%; background:${s.color};" data-pct="${s.pct}"></div></div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function initSkillBars() {
+  setTimeout(() => {
+    document.querySelectorAll('.skill-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.pct + '%';
+    });
+  }, 400);
+}
+
+function initReveal() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('in-view'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx - 4 + 'px';
+  cursor.style.top = my - 4 + 'px';
+});
+function animRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animRing);
+}
+animRing();
+document.addEventListener('mousedown', () => cursor.style.transform = 'scale(2)');
+document.addEventListener('mouseup', () => cursor.style.transform = 'scale(1)');
+</script>
+</body>
+</html>
