@@ -1,0 +1,1 @@
+Modern interactive portfolio website showcasing cybersecurity, automotive diagnostics, and software development experience through a futuristic single-page design featuring animated transitions, dynamic skill visualization, project highlights, and responsive UI components.
