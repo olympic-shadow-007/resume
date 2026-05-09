@@ -418,10 +418,13 @@
   /* SKILLS */
   .skills-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1px;
     background: var(--border);
     border: 1px solid var(--border);
+  }
+  @media (max-width: 700px) {
+    .skills-grid { grid-template-columns: repeat(2, 1fr); }
   }
   .skill-item {
     background: var(--bg);
